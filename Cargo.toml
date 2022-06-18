@@ -1,0 +1,9 @@
+[package]
+name = "picard"
+description = "PIC Action Replay Decoder"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+termcolor = "1"
+thiserror = "1"
