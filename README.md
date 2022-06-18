@@ -6,7 +6,7 @@ Make it so!
 
 ## What is it?
 
-The PS1 Action Replay Pro/GameShark Pro contains a PIC12C508 microcontroller that serves as a copy protection device. This project reimplements the functionality of the PID on these cheat cartridges. It can be used as a library, or a standalone command line application. The library currently depends on the Rust standard library (for the `Error` trait), but can very easily be made `no_std` compatible to run on microcontrollers if needed.
+The PS1 Action Replay Pro/GameShark Pro contains a PIC12C508 microcontroller that serves as a copy protection device. This project reimplements the functionality of the PIC on these cheat cartridges. It can be used as a library, or a standalone command line application. The library currently depends on the Rust standard library (for the `Error` trait), but can very easily be made `no_std` compatible to run on microcontrollers if needed.
 
 ## Why?
 
@@ -69,16 +69,19 @@ Eight cipher modes are supported (there is code for an unused ninth mode). Any i
 | 6    | `S(k++) +- t`      |
 | 7    | See note           |
 | 255  | ID or version      |
+| N/A  | `S(k) ^ t`         |
 
 Notes:
 
-- `k` is the cipher key.
+- `k` is the cipher key. Values 1..31 are valid.
 - `t` is one byte of the cipher text.
 - `S()` is a function that substitutes its input with deterministic output. (Common substitution box.) There are four substitution boxes, and which one is used depends on the cipher mode and which byte of the cipher text is being processed.
 - `swap()` is a function that swaps the nibble in the given byte. E.g. `swap(0xf2) == 0x2f`
 - `^` is XOR, `+` is ADD, `-` is SUBTRACT, `++` is post-increment, `+-` means either ADD or SUBTRACT depending on which byte in the cipher text is being accessed. See code for details.
 - Cipher mode 7 will defer to cipher mode 1 with 50% probability (depending on the LSB of the cipher key) or will use `~t` inverting the bits of the cipher text byte.
 - ID or version has an unknown purpose. Cipher mode 255 always returns the same fixed response: `0x00 0x00 0x01 0x02`. This may be an identifier or version number.
+- The N/A mode is not accessible by the PIC, and is included here for completeness.
+- The cipher key has only very minimal validation, and will execute cipher mode 7 if its value is 0 or bit 5 is set. Bits 6 and 7 are ignored, so it is possible to cause arbitrary code execution by using a cipher key with a value greater or equal to 64. (Exactly whether this is exploitable needs additional investigation.)
 
 ### Response format
 
