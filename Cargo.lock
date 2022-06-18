@@ -3,9 +3,16 @@
 version = 3
 
 [[package]]
+name = "error-iter"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e09bfe3000e5aaf2904d2c90e8f38de83dff06731c666d588d382f19da6606a9"
+
+[[package]]
 name = "picard"
 version = "0.1.0"
 dependencies = [
+ "error-iter",
  "termcolor",
  "thiserror",
 ]

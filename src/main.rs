@@ -1,3 +1,4 @@
+use error_iter::ErrorIter;
 use picard::{decode, Error};
 use std::{
     env,
@@ -9,12 +10,17 @@ use thiserror::Error;
 
 #[derive(Debug, Error)]
 enum RunError {
-    #[error("I/O error: {0}")]
+    #[error("I/O error")]
     Io(#[from] std::io::Error),
 
-    #[error("Decode error: {0}")]
+    #[error("Decoding failed")]
     Decode(#[from] Error),
+
+    #[error("Could not parse command line arguments\n  {0}")]
+    ArgParse(&'static str),
 }
+
+impl ErrorIter for RunError {}
 
 fn main() -> Result<(), RunError> {
     if let Err(err) = run() {
@@ -22,14 +28,15 @@ fn main() -> Result<(), RunError> {
 
         stderr.set_color(ColorSpec::new().set_fg(Some(Color::Red)))?;
         writeln!(&mut stderr, "Error: {}", err)?;
+        for source in err.chain().skip(1) {
+            writeln!(&mut stderr, "  Caused by: {}", source)?;
+        }
         stderr.reset()?;
 
         eprintln!();
-
-        Err(err)
-    } else {
-        Ok(())
     }
+
+    Ok(())
 }
 
 fn run() -> Result<(), RunError> {
@@ -38,9 +45,9 @@ fn run() -> Result<(), RunError> {
     println!();
 
     let mut args = env::args_os();
-    let input_path = args
-        .nth(1)
-        .expect("Usage: picard <input_path> [output_path]");
+    let input_path = args.nth(1).ok_or(RunError::ArgParse(
+        "Usage: picard <input_path> [output_path]",
+    ))?;
     let output_path = args.next();
 
     let input = fs::read(input_path)?;
